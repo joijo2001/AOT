@@ -1,0 +1,116 @@
+import requests
+import re
+import string
+!pip install pymorphy2
+import pymorphy2
+import collections
+crime = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/CrimeAndPunishment.txt').text
+onegin = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/EugeneOnegin.txt').text
+fathers = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/FathersAndSons.txt').text
+master = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/MasterAndMargarita.txt').text
+war = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/WarAndPeace.txt').text
+
+# Формируем словарь слов.
+words_d = {}
+words_count = 0
+
+word = ''
+for dict1 in {crime, onegin, fathers, master, war}:
+  for i in dict1:
+      if ((i >= 'а' and i <= 'я') or (i >= 'А' and i <= 'Я') or i == '-'):
+        if (i == '-'):
+          if (not word):
+            continue
+        word += i.lower()
+      else:
+          if word:
+            if (word[len(word) - 1] == '-'):
+              word = word[:len(word)-1]
+            w = words_d.get(word, 0)
+            if w == 0:
+              words_d[word] = 1
+            else:
+              words_d[word] = w + 1
+          word = ''
+          words_count += 1
+
+sorted_d1 = {}
+sorted_d1 = dict(sorted(words_d.items(), reverse= True, key = lambda x: x[1]))
+words_d = sorted_d1
+
+print ("Словарь слов: ", words_d)
+print ("Количество различных слов: ", len(words_d))
+print ('Всего слов: ', words_count)
+
+#Составляем список лемм
+morph = pymorphy2.MorphAnalyzer()
+lemmas = {}
+
+for i in words_d:
+  p = morph.parse(i)[0] 
+  lemma = p.normal_form #Начальная форма слова
+  l = lemmas.get(lemma, 0)
+  if l == 0:
+    lemmas[lemma] = words_d[i]
+  else:
+    lemmas[lemma] = l + words_d[i]
+
+sorted_lemmas = {}
+sorted_lemmas = dict(sorted(lemmas.items(), reverse= True, key = lambda x: x[1]))
+lemmas = sorted_d1
+print(len(lemmas))
+print(lemmas)
+
+#20 самых частотных слов
+new_lemmas = collections.Counter(lemmas).most_common(20)
+print(new_lemmas)
+print(len(new_lemmas))
+
+#Стоим график 1
+import matplotlib.pyplot as plt
+
+frequency = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+index = 0
+for l in new_lemmas:
+  num = new_lemmas[index][1]
+  frequency[index] = num / words_count
+  index += 1
+
+X = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+Y = frequency
+plt.title('Закон Зипфа') # заголовок
+plt.xlabel('Ранг') # ось абсцисс
+plt.ylabel('Частота') # ось ординат
+plt.plot(X, Y)
+plt.show()
+
+#Стоим график 2 (аппроксимированный) (Мой способ - фигня, лучше делать иначе)
+import matplotlib.pyplot as plt
+
+frequency = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+sum = 0
+index = 1
+for l in new_lemmas:
+  num = new_lemmas[index - 1][1]
+  sum += num * index / words_count
+  index += 1
+
+sum /= 20
+
+index = 0
+for l in new_lemmas:
+  num = new_lemmas[index][1]
+  frequency[index] = sum / (index + 1)
+  index += 1
+
+print(sum)
+
+X = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+Y = frequency
+plt.title('Закон Зипфа') # заголовок
+plt.xlabel('Ранг') # ось абсцисс
+plt.ylabel('Частота') # ось ординат
+plt.plot(X, Y)
+plt.show()
