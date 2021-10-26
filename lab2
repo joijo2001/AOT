@@ -1,0 +1,60 @@
+import requests
+import re
+import nltk
+!pip install git+https://github.com/Koziev/rutokenizer
+import rutokenizer
+text = requests.get('https://raw.githubusercontent.com/joijo2001/AOT/main/lab2_text').text
+!pip install razdel
+!pip install mosestokenizer
+nltk.download('punkt')
+
+test_txt = 'том, что 11.01.01 https://lenta.ru т.е. a=b*c info@wikipedia.org 3.14 пресс-конференции'
+
+tokens1 = text.split()
+tokens1_1 = test_txt.split()
+print(tokens1_1)
+
+tokens2 = re.findall(r'\w+|\d+', text)
+tokens2_1 = re.findall(r'\w+|\d+', test_txt)
+print(tokens2_1)
+
+tokens3 = nltk.word_tokenize(text)
+tokens3_1 = nltk.word_tokenize(test_txt)
+print(tokens3_1)
+
+from nltk.tokenize import RegexpTokenizer
+tokenizer = RegexpTokenizer(r'\w+')
+tokens4 = tokenizer.tokenize(text)
+tokens4_1 = tokenizer.tokenize(test_txt)
+print(tokens4_1)
+
+from razdel import tokenize, sentenize
+tokens5_1 = list(tokenize(text))
+tokens5_1_1 = list(tokenize(test_txt))
+tokens5_2 = list(sentenize(text))
+print(tokens5_1_1)
+
+from mosestokenizer import *
+strs = text.split('\n')
+tokens6 = list()
+tokenize = MosesTokenizer('ru')
+for s in strs:
+  tokens6 += tokenize(s)
+tokens6_1 = tokenize(test_txt)
+tokenize.close()
+print(tokens6_1)
+
+t = rutokenizer.Tokenizer()
+t.load()
+tokens7 = t.tokenize(text)
+tokens7_1 = t.tokenize(test_txt)
+print(tokens7_1)
+
+print('С помощью функции строкового объекта: ', len(tokens1), tokens1)
+print('С помощью регулярного выражения: ', len(tokens2), tokens2)
+print('С помощью функции из пакета nltk: ', len(tokens3), tokens3)
+print('С помощью функции токенизатора RegexpTokenizer из пакета nltk: ', len(tokens4), tokens4)
+print('С помощью функции tokenize из библиотеки Razdel (Natasha): ', len(tokens5_1), tokens5_1)
+print('С помощью функции sentenize из библиотеки Razdel (Natasha): ', len(tokens5_2), tokens5_2)
+print('С помощью функции токенизатора из библиотеки mosestokenizer:', len(tokens6), tokens6)
+print('С помощью токенизатора rutokenizer: ', len(tokens7), tokens7)
