@@ -1,0 +1,119 @@
+import requests
+import re
+import string
+crime = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/CrimeAndPunishment.txt').text
+onegin = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/EugeneOnegin.txt').text
+fathers = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/FathersAndSons.txt').text
+master = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/MasterAndMargarita.txt').text
+war = requests.get('https://raw.githubusercontent.com/nevmenandr/word2vec-russian-novels/master/books_before/WarAndPeace.txt').text
+
+# Формируем словарь символов.
+d = {}
+for dict1 in {crime, onegin, fathers, master, war}:
+  for ch in dict1:
+    n = d.get(ch, 0)
+    if n == 0:
+      d[ch] = 1
+    else:
+      d[ch] = n + 1
+
+sorted_d = {}
+sorted_d = dict(sorted(d.items(), reverse= True, key = lambda x: x[1]))
+
+print("Число символов: ", len(d), "\nСловарь: ", sorted_d)
+
+# Формируем словарь слов.
+words_d = {}
+words_count = 0
+  
+word = ''
+for dict1 in {crime, onegin, fathers, master, war}:
+  for i in dict1:
+      if ((i >= 'а' and i <= 'я') or (i >= 'А' and i <= 'Я') or i == '-'):
+        if (i == '-'):
+          if (not word):
+            continue
+        word += i.lower()
+      else:
+          if word:
+            if (word[len(word) - 1] == '-'):
+              word = word[:len(word)-1]
+            w = words_d.get(word, 0)
+            if w == 0:
+              words_d[word] = 1
+            else:
+              words_d[word] = w + 1
+          word = ''
+          words_count = words_count + 1
+
+sorted_d1 = {}
+sorted_d1 = dict(sorted(words_d.items(), reverse= True, key = lambda x: x[1]))
+words_d = sorted_d1
+
+print ("Словарь слов: ", words_d)
+print ("Количество различных слов: ", len(words_d))
+print ("Количество слов: ", words_count)
+
+alph = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя-" 
+
+print("Введите слово: ") 
+error_word = input() 
+not_error_word = error_word 
+answ = set() 
+
+# Символ в начале
+for letter_alph in alph: 
+  not_error_word = letter_alph + error_word 
+  if (not_error_word in words_d.keys()): 
+    answ.add(not_error_word) 
+
+# Замена символа в строке
+for str in error_word: 
+  i = error_word.find(str) 
+  for letter_alph in alph: 
+    not_error_word = error_word[:i+1] + letter_alph + error_word[i+1:] 
+    if (not_error_word in words_d.keys()): 
+      answ.add(not_error_word) 
+
+# Удалить один символ
+for str in error_word: 
+  i = error_word.find(str) 
+  not_error_word = error_word[:i] + error_word[i+1:] 
+  if (not_error_word in words_d.keys()): 
+    answ.add(not_error_word) 
+
+# Символ между букв
+for str in error_word: 
+  i = error_word.find(str) 
+  for letter_alph in alph: 
+    not_error_word = error_word[:i] + letter_alph + error_word[i+1:]
+    if (not_error_word in words_d.keys()): 
+      answ.add(not_error_word) 
+
+# Перемена местами
+for str in error_word: 
+  i = error_word.find(str) 
+  if (i != len(error_word) - 2) and (i != len(error_word) - 1): 
+    not_error_word = error_word[:i] + error_word[i+1] + error_word[i] + error_word[i+2:] 
+  else: 
+    if (i != len(error_word) - 1) and (i == len(error_word) - 2): 
+      not_error_word = error_word[:i] + error_word[i + 1] + error_word[i] 
+  if (not_error_word in words_d.keys()): 
+    answ.add(not_error_word) 
+
+wrd = '' 
+flag = 'false' 
+
+for i in answ: 
+  if (i == error_word): 
+    flag = 'true' 
+  else: 
+    wrd += i + "\n" 
+
+if (wrd == ''): 
+  print("Слово не найдено в словаре") 
+else: 
+  if (flag == 'true'): 
+    print("Это слово правильно") 
+  else: 
+    print(wrd)
